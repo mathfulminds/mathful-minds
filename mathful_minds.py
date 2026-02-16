@@ -10,49 +10,58 @@ st.set_page_config(page_title="Mathful Minds", page_icon="🧠", layout="centere
 # --- CUSTOM STYLE ---
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
 
 html, body, [class*="css"] {
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Nunito', sans-serif;
 }
 
 .stApp {
-    background-color: #FAFAF9;
+    background: linear-gradient(160deg, #FFF7ED 0%, #EEF2FF 50%, #F0FDF4 100%);
 }
 
 /* Header */
 .app-header {
     text-align: center;
-    padding: 1.5rem 0 1rem 0;
+    padding: 1.5rem 0 0.5rem 0;
 }
 .app-header h1 {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: #1A1A1A;
+    font-family: 'Nunito', sans-serif;
+    font-size: 2.6rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #F97316, #8B5CF6, #06B6D4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin: 0;
     letter-spacing: -0.5px;
 }
 .app-header p {
-    font-size: 1rem;
-    color: #78716C;
-    margin: 0.25rem 0 0 0;
+    font-size: 1.05rem;
+    color: #6B7280;
+    margin: 0.2rem 0 0 0;
+    font-weight: 600;
 }
 
 /* Chat messages */
 div[data-testid="stChatMessage"] {
-    background-color: #FFFFFF;
-    border: 1px solid #E7E5E4;
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 1rem 1.25rem;
     margin-bottom: 0.75rem;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: none;
 }
 
-/* User messages get a subtle tint */
+/* Assistant messages: purple tint */
+div[data-testid="stChatMessage"]:has(div[data-testid="chatAvatarIcon-assistant"]) {
+    background: linear-gradient(135deg, #F3E8FF, #EDE9FE);
+    border-left: 4px solid #8B5CF6;
+}
+
+/* User messages: orange tint */
 div[data-testid="stChatMessage"]:has(div[data-testid="chatAvatarIcon-user"]) {
-    background-color: #F5F5F4;
-    border-color: #D6D3D1;
+    background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
+    border-left: 4px solid #F97316;
 }
 
 /* Math rendering */
@@ -65,51 +74,83 @@ div[data-testid="stChatMessage"]:has(div[data-testid="chatAvatarIcon-user"]) {
 
 /* Chat input */
 div[data-testid="stChatInput"] textarea {
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Nunito', sans-serif;
     font-size: 1rem;
-    border-radius: 12px;
+    border-radius: 16px;
 }
 
-/* Sidebar */
-section[data-testid="stSidebar"] {
-    background-color: #FAFAF9;
-    border-right: 1px solid #E7E5E4;
+/* Settings expander */
+div[data-testid="stExpander"] {
+    background: white;
+    border-radius: 16px;
+    border: 2px solid #E5E7EB;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-bottom: 0.5rem;
 }
-
-section[data-testid="stSidebar"] h1 {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 1.1rem;
+div[data-testid="stExpander"] summary {
     font-weight: 700;
-    color: #1A1A1A;
+    font-size: 1rem;
 }
 
-/* Image upload area */
-div[data-testid="stFileUploader"] {
+/* Buttons */
+div[data-testid="stButton"] > button {
     border-radius: 12px;
-}
-
-/* Primary button */
-div[data-testid="stButton"] > button[kind="primary"] {
-    background-color: #1A1A1A;
-    color: #FFFFFF;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
 }
 
 /* Remove default streamlit footer */
 footer { visibility: hidden; }
+
+/* Welcome card */
+.welcome-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    margin: 1rem 0;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    border: 2px solid #E5E7EB;
+    text-align: center;
+}
+.welcome-card h3 {
+    font-weight: 800;
+    color: #1F2937;
+    margin-bottom: 0.5rem;
+}
+.welcome-card p {
+    color: #6B7280;
+    font-size: 1rem;
+}
+.tip-row {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+}
+.tip-item {
+    background: linear-gradient(135deg, #FFF7ED, #FEF3C7);
+    border: 2px solid #FDE68A;
+    border-radius: 14px;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #92400E;
+    min-width: 160px;
+}
 </style>
 """, unsafe_allow_html=True)
 
+
 # --- SYSTEM PROMPT ---
-SYSTEM_PROMPT = r"""IDENTITY & ROLE
+# Built with string concatenation (not .format()) to avoid breaking LaTeX curly braces
+SYSTEM_PROMPT_PREFIX = r"""IDENTITY & ROLE
 
 You are Mathful, an AI math tutor built by Mathful Minds. You work with middle school students in grades 6 through 8. Your job is to help students understand math deeply, not just get answers. You are patient, direct, and clear. You do not use filler language or excessive praise. When a student does something well, you acknowledge it briefly and move forward.
 
-STUDENT CONTEXT: {grade_level}. Topics of focus: {topics}.
+"""
 
+SYSTEM_PROMPT_BODY = r"""
 CORE TEACHING METHOD: GUIDED SOCRATIC APPROACH
 
 Your default mode is to guide students to discover answers themselves through targeted questions. Follow this escalation framework:
@@ -217,31 +258,30 @@ WHEN A STUDENT UPLOADS A PHOTO
 4. If the image is unclear, ask the student to re-upload or type the problem."""
 
 
-# --- HELPER: Encode image to base64 for the API ---
-def encode_image(image: Image.Image, max_size: int = 1024) -> tuple[str, str]:
-    """Resize and encode an image to base64. Returns (base64_data, media_type)."""
-    # Resize if too large
+def build_system_prompt(grade_level: str, topics: str) -> str:
+    """Build full system prompt safely without .format() to protect LaTeX braces."""
+    context_line = "STUDENT CONTEXT: " + grade_level + ". Topics of focus: " + topics + ".\n"
+    return SYSTEM_PROMPT_PREFIX + context_line + SYSTEM_PROMPT_BODY
+
+
+# --- HELPER: Encode image to base64 ---
+def encode_image(image: Image.Image, max_size: int = 1024) -> tuple:
     if max(image.size) > max_size:
         image.thumbnail((max_size, max_size), Image.LANCZOS)
-    
-    # Convert to RGB if needed (handles RGBA from canvas)
     if image.mode in ("RGBA", "P"):
         image = image.convert("RGB")
-    
     buffer = BytesIO()
     image.save(buffer, format="JPEG", quality=85)
     b64 = base64.standard_b64encode(buffer.getvalue()).decode("utf-8")
     return b64, "image/jpeg"
 
 
-# --- HELPER: Build API messages from chat history ---
+# --- HELPER: Build API messages ---
 def build_api_messages(chat_history: list) -> list:
-    """Convert our chat history into Anthropic API message format."""
     messages = []
     for msg in chat_history:
         if msg["role"] == "user":
             if msg.get("image_b64"):
-                # Message with image
                 content = [
                     {
                         "type": "image",
@@ -264,12 +304,10 @@ def build_api_messages(chat_history: list) -> list:
     return messages
 
 
-# --- HELPER: Get tutor response from Claude ---
+# --- HELPER: Get tutor response ---
 def get_tutor_response(client, chat_history: list, grade_level: str, topics: str) -> str:
-    """Call Claude API and return the tutor response."""
-    system = SYSTEM_PROMPT.format(grade_level=grade_level, topics=topics)
+    system = build_system_prompt(grade_level, topics)
     messages = build_api_messages(chat_history)
-    
     response = client.messages.create(
         model="claude-sonnet-4-5-20250929",
         max_tokens=1024,
@@ -286,75 +324,25 @@ if "pending_image" not in st.session_state:
     st.session_state.pending_image = None
 
 
-# --- SIDEBAR ---
-with st.sidebar:
-    st.markdown("## Settings")
-    
-    grade_level = st.selectbox(
-        "Grade Level",
-        ["6th Grade", "7th Grade", "8th Grade"],
-        index=0,
-    )
-    
-    topics = st.multiselect(
-        "Topics",
-        ["Ratios & Proportions", "Expressions & Equations", "Number System",
-         "Geometry", "Functions", "Statistics & Probability"],
-        default=["Expressions & Equations"],
-    )
-    topics_str = ", ".join(topics) if topics else "All math topics"
-    
-    st.divider()
-    
-    # Image upload in sidebar
-    st.markdown("### Upload a Photo")
-    st.caption("Upload a picture of a math problem and it will be sent with your next message.")
-    uploaded_file = st.file_uploader(
-        "Upload",
-        type=["png", "jpg", "jpeg"],
-        key="photo_upload",
-        label_visibility="collapsed",
-    )
-    
-    if uploaded_file is not None:
-        img = Image.open(uploaded_file)
-        st.image(img, use_container_width=True)
-        b64, media_type = encode_image(img)
-        st.session_state.pending_image = {"b64": b64, "media_type": media_type}
-        st.success("Image ready — type a message or just press Enter to send it.")
-    
-    st.divider()
-    
-    if st.button("Clear Conversation", use_container_width=True):
-        st.session_state.chat_history = []
-        st.session_state.pending_image = None
-        st.rerun()
-    
-    st.divider()
-    st.caption("Powered by Claude · Built by Mathful Minds")
-
-
 # --- API KEY ---
 api_key = st.secrets.get("ANTHROPIC_API_KEY", None)
 
 if not api_key:
-    # Show setup instructions if no key is configured
     st.markdown("""
     <div class="app-header">
         <h1>Mathful Minds</h1>
-        <p>AI Math Tutor for Grades 6–8</p>
+        <p>AI Math Tutor for Grades 6-8</p>
     </div>
     """, unsafe_allow_html=True)
-    
     st.info("To get started, add your Anthropic API key.")
     st.markdown("""
-**Option A — Streamlit Secrets (recommended for deployment):**  
-Create a file at `.streamlit/secrets.toml` with:
+**Option A — Streamlit Secrets (recommended):**
+Create `.streamlit/secrets.toml`:
 ```toml
 ANTHROPIC_API_KEY = "sk-ant-..."
 ```
 
-**Option B — Enter it below for quick testing:**
+**Option B — Enter below for testing:**
 """)
     api_key = st.text_input("Anthropic API Key", type="password", placeholder="sk-ant-...")
     if not api_key:
@@ -367,24 +355,76 @@ client = anthropic.Anthropic(api_key=api_key)
 st.markdown("""
 <div class="app-header">
     <h1>Mathful Minds</h1>
-    <p>AI Math Tutor for Grades 6–8</p>
+    <p>AI Math Tutor for Grades 6-8</p>
 </div>
 """, unsafe_allow_html=True)
 
 
+# --- TOP BAR: Settings + Upload + Clear ---
+col_settings, col_upload, col_clear = st.columns([2, 2, 1])
+
+with col_settings:
+    with st.expander("Settings", expanded=False):
+        grade_level = st.selectbox(
+            "Grade Level",
+            ["6th Grade", "7th Grade", "8th Grade"],
+            index=0,
+        )
+        topics = st.multiselect(
+            "Topics",
+            ["Ratios & Proportions", "Expressions & Equations", "Number System",
+             "Geometry", "Functions", "Statistics & Probability"],
+            default=["Expressions & Equations"],
+        )
+        topics_str = ", ".join(topics) if topics else "All math topics"
+
+with col_upload:
+    with st.expander("Upload a Photo", expanded=False):
+        uploaded_file = st.file_uploader(
+            "Upload",
+            type=["png", "jpg", "jpeg"],
+            key="photo_upload",
+            label_visibility="collapsed",
+        )
+        if uploaded_file is not None:
+            img = Image.open(uploaded_file)
+            st.image(img, use_container_width=True)
+            b64, media_type = encode_image(img)
+            st.session_state.pending_image = {"b64": b64, "media_type": media_type}
+            st.caption("Image ready — send a message to include it.")
+
+with col_clear:
+    st.markdown("<div style='height: 0.5rem'></div>", unsafe_allow_html=True)
+    if st.button("Clear Chat", use_container_width=True):
+        st.session_state.chat_history = []
+        st.session_state.pending_image = None
+        st.rerun()
+
+# Defaults if settings expander hasn't been opened
+if "grade_level" not in dir():
+    grade_level = "6th Grade"
+if "topics_str" not in dir():
+    topics_str = "Expressions & Equations"
+
+
 # --- WELCOME MESSAGE ---
 if not st.session_state.chat_history:
-    with st.chat_message("assistant"):
-        st.markdown(
-            "I'm Mathful — your math tutor. Send me a problem, show me your work, "
-            "or upload a photo of something you're stuck on. What are you working on?"
-        )
+    st.markdown("""
+    <div class="welcome-card">
+        <h3>Hey! I'm Mathful, your math tutor.</h3>
+        <p>Type a problem, show me your work, or upload a photo. I'll help you figure it out — step by step.</p>
+        <div class="tip-row">
+            <div class="tip-item">Type a problem</div>
+            <div class="tip-item">Show your work</div>
+            <div class="tip-item">Upload a photo</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 # --- DISPLAY CHAT HISTORY ---
 for msg in st.session_state.chat_history:
     with st.chat_message(msg["role"]):
-        # Show image thumbnail if the user sent one
         if msg["role"] == "user" and msg.get("image_b64"):
             img_bytes = base64.b64decode(msg["image_b64"])
             st.image(img_bytes, width=250)
@@ -395,27 +435,23 @@ for msg in st.session_state.chat_history:
 user_input = st.chat_input("Type your math problem or answer here...")
 
 if user_input is not None:
-    # Build the user message
     user_msg = {"role": "user", "text": user_input}
-    
-    # Attach pending image if there is one
+
     if st.session_state.pending_image:
         user_msg["image_b64"] = st.session_state.pending_image["b64"]
         user_msg["image_media_type"] = st.session_state.pending_image["media_type"]
-        st.session_state.pending_image = None  # Clear after attaching
-    
+        st.session_state.pending_image = None
+
     st.session_state.chat_history.append(user_msg)
-    
-    # Display user message
+
     with st.chat_message("user"):
         if user_msg.get("image_b64"):
             img_bytes = base64.b64decode(user_msg["image_b64"])
             st.image(img_bytes, width=250)
         st.markdown(user_input)
-    
-    # Get tutor response
+
     with st.chat_message("assistant"):
-        with st.spinner(""):
+        with st.spinner("Thinking..."):
             try:
                 response_text = get_tutor_response(
                     client, st.session_state.chat_history, grade_level, topics_str
@@ -426,8 +462,8 @@ if user_input is not None:
                     "text": response_text,
                 })
             except anthropic.AuthenticationError:
-                st.error("Invalid API key. Please check your Anthropic API key and try again.")
+                st.error("Invalid API key. Check your Anthropic API key and try again.")
             except anthropic.RateLimitError:
-                st.error("Rate limit reached. Please wait a moment and try again.")
+                st.error("Rate limit reached. Wait a moment and try again.")
             except Exception as e:
                 st.error(f"Something went wrong: {str(e)}")
