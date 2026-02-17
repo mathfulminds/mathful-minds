@@ -5,8 +5,57 @@ The app controls the FLOW, Claude provides the CONTENT.
 """
 
 import json
+import base64
 import anthropic
 from prompt import build_system_prompt, get_level_prompt
+
+
+def read_problem_from_image(client, image_bytes: bytes, media_type: str = "image/jpeg") -> dict:
+    """
+    Read a math problem from an uploaded image using Claude's vision.
+    Returns the extracted problem text for student confirmation.
+    """
+    b64 = base64.standard_b64encode(image_bytes).decode("utf-8")
+
+    response = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=512,
+        messages=[{
+            "role": "user",
+            "content": [
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": media_type,
+                        "data": b64,
+                    },
+                },
+                {
+                    "type": "text",
+                    "text": """Read the math problem from this image. Respond with ONLY a JSON object:
+
+{"problem_text": "the math problem written clearly in text form", "is_clear": true, "notes": "any notes about unclear parts, empty string if clear"}
+
+Rules:
+- Write the problem exactly as shown, using standard math notation
+- Use / for fractions, ^ for exponents, sqrt() for square roots
+- If the image is unclear or you can't read parts of it, set is_clear to false and explain in notes
+- If there are multiple problems, extract only the first one""",
+                },
+            ],
+        }],
+    )
+
+    raw = response.content[0].text
+    try:
+        return parse_json_response(raw)
+    except (json.JSONDecodeError, ValueError):
+        return {
+            "problem_text": raw.strip(),
+            "is_clear": True,
+            "notes": "",
+        }
 
 
 def call_claude(client, system: str, user_message: str, max_tokens: int = 2048) -> str:
