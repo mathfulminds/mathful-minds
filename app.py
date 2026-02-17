@@ -112,7 +112,11 @@ if "confidence_level" not in st.session_state:
 if "attempt_count" not in st.session_state:
     st.session_state.attempt_count = 0
 if "api_key" not in st.session_state:
-    st.session_state.api_key = ""
+    # Try to load from Streamlit secrets first
+    try:
+        st.session_state.api_key = st.secrets["ANTHROPIC_API_KEY"]
+    except (KeyError, FileNotFoundError):
+        st.session_state.api_key = ""
 
 
 # ─── Sidebar ───
@@ -121,15 +125,18 @@ with st.sidebar:
     st.markdown("---")
 
     # API Key input
-    api_key = st.text_input(
-        "Anthropic API Key",
-        type="password",
-        value=st.session_state.api_key,
-        help="Get yours at console.anthropic.com",
-        placeholder="sk-ant-...",
-    )
-    if api_key:
-        st.session_state.api_key = api_key
+    if st.session_state.api_key and st.session_state.api_key.startswith("sk-ant"):
+        st.success("API key loaded", icon="✅")
+    else:
+        api_key = st.text_input(
+            "Anthropic API Key",
+            type="password",
+            value=st.session_state.api_key,
+            help="Get yours at console.anthropic.com",
+            placeholder="sk-ant-...",
+        )
+        if api_key:
+            st.session_state.api_key = api_key
 
     st.markdown("---")
 
@@ -233,13 +240,14 @@ else:
 
 # Check for API key
 if not st.session_state.api_key:
-    st.warning("Enter your Anthropic API key in the sidebar to start chatting with Mathful.")
+    st.warning("No API key found. Enter it in the sidebar or add it to your app's Secrets.")
     st.markdown("""
-    **How to get your API key:**
-    1. Go to [console.anthropic.com](https://console.anthropic.com)
-    2. Sign up or log in
-    3. Go to API Keys and create a new key
-    4. Paste it in the sidebar
+    **Option 1 — Paste in sidebar** (temporary, resets on refresh)
+
+    **Option 2 — Add to Streamlit Secrets** (permanent):
+    1. Go to your app settings → **Secrets**
+    2. Add: `ANTHROPIC_API_KEY = "sk-ant-api03-your-key-here"`
+    3. Save and reboot the app
     """)
     st.stop()
 
