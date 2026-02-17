@@ -81,18 +81,21 @@ st.markdown("""
     }
     .solution-step:last-child { border-bottom: none; }
     .step-math {
-        font-family: 'DM Sans', sans-serif;
-        font-size: 1.05rem;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 1rem;
         font-weight: 600;
         color: #1a1a2e;
-        padding: 6px 10px;
+        padding: 8px 12px;
         background: #f8f9fa;
         border-radius: 6px;
+        white-space: pre;
+        line-height: 1.5;
+        overflow-x: auto;
     }
     .step-explain {
         font-size: 0.9rem;
         color: #555;
-        padding: 6px 0;
+        padding: 8px 0;
         display: flex;
         align-items: center;
     }
@@ -269,6 +272,11 @@ def render_two_column_solution(steps, title=None):
     for i, step in enumerate(steps):
         math_text = step.get("math", "")
         explanation = step.get("explanation", "")
+        # Ensure newlines render properly in the pre-formatted math block
+        # JSON may contain literal \n or actual newlines
+        math_text = math_text.replace("\\n", "\n")
+        # Escape HTML but preserve newlines
+        math_text = math_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
         st.markdown(f"""
         <div class="solution-step">
             <div class="step-math">{math_text}</div>
@@ -772,18 +780,20 @@ elif st.session_state.phase in ("level_2_mc", "level_3_mc"):
                 prev_answer_key = f"mc_answer_{prev_i}"
                 if prev_answer_key in st.session_state:
                     prev_result = prev_step.get("result", "")
+                    prev_result_display = prev_result.replace("\\n", "\n").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                     st.markdown(f"""
                     <div class="solution-step">
-                        <div class="step-math">{prev_result}</div>
+                        <div class="step-math">{prev_result_display}</div>
                         <div class="step-explain">Step {prev_step.get('step_number', prev_i + 1)} ✓</div>
                     </div>
                     """, unsafe_allow_html=True)
 
             # Show current state
             if step.get("current_state"):
+                current_display = step['current_state'].replace("\\n", "\n").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                 st.markdown(f"""
                 <div class="solution-step" style="border: 2px solid #3498db; border-radius: 8px; padding: 12px;">
-                    <div class="step-math" style="font-size: 1.15rem;">{step['current_state']}</div>
+                    <div class="step-math" style="font-size: 1.05rem;">{current_display}</div>
                     <div class="step-explain" style="color: #3498db;">← Current</div>
                 </div>
                 """, unsafe_allow_html=True)
