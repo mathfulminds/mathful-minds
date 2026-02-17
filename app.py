@@ -251,7 +251,7 @@ def reset_problem():
     for key, val in DEFAULTS.items():
         st.session_state[key] = val
     # Clear any dynamic MC/level answer keys
-    keys_to_remove = [k for k in st.session_state if k.startswith(("mc_answer_", "l4_answer_", "l4_mc_", "l4_input_", "l5_"))]
+    keys_to_remove = [k for k in st.session_state if k.startswith(("mc_answer_", "mc_eliminated_", "l4_answer_", "l4_mc_", "l4_input_", "l5_"))]
     for k in keys_to_remove:
         del st.session_state[k]
 
@@ -792,47 +792,74 @@ elif st.session_state.phase in ("level_2_mc", "level_3_mc"):
             st.markdown(f"##### Step {step.get('step_number', current + 1)}")
             st.markdown(f"**{step.get('question', 'What would you do next?')}**")
 
+            # Track eliminated wrong answers for this step
+            eliminated_key = f"mc_eliminated_{current}"
+            if eliminated_key not in st.session_state:
+                st.session_state[eliminated_key] = []
+
+            eliminated = st.session_state[eliminated_key]
+
             if answer_key not in st.session_state:
-                # Show MC options as buttons
+                # Show MC options — grey out eliminated ones
                 options = step.get("options", [])
                 option_labels = ["A", "B", "C", "D", "E"]
+                correct_idx = step.get("correct_index", 0)
+
+                # Show feedback if they just got one wrong
+                if eliminated:
+                    last_wrong = eliminated[-1]
+                    # Get explanation for the last wrong answer
+                    option_explanations = step.get("option_explanations", [])
+                    if last_wrong < len(option_explanations):
+                        st.error(f"Not quite. {option_explanations[last_wrong]}")
+                    else:
+                        st.error("Not quite. Let's try again.")
 
                 for i, option in enumerate(options):
                     label = option_labels[i] if i < len(option_labels) else str(i + 1)
-                    if st.button(f"**{label}.** {option}", key=f"opt_{current}_{i}", use_container_width=True):
-                        correct_idx = step.get("correct_index", 0)
-                        is_correct = (i == correct_idx)
-                        st.session_state[answer_key] = {
-                            "selected": i,
-                            "correct": correct_idx,
-                            "is_correct": is_correct,
-                        }
-                        st.rerun()
+
+                    if i in eliminated:
+                        # Show as struck through with explanation
+                        wrong_reason = ""
+                        option_explanations = step.get("option_explanations", [])
+                        if i < len(option_explanations):
+                            wrong_reason = f' — <em style="color:#999; font-size:0.85rem;">{option_explanations[i]}</em>'
+                        st.markdown(f'<div style="padding:8px 16px; margin:4px 0; background:#f5f5f5; border:1px solid #ddd; border-radius:8px; color:#bbb; text-decoration:line-through;">**{label}.** {option}</div>{wrong_reason if wrong_reason else ""}', unsafe_allow_html=True)
+                    else:
+                        if st.button(f"**{label}.** {option}", key=f"opt_{current}_{i}_try{len(eliminated)}", use_container_width=True):
+                            if i == correct_idx:
+                                # Correct!
+                                st.session_state[answer_key] = {
+                                    "selected": i,
+                                    "correct": correct_idx,
+                                    "is_correct": True,
+                                    "attempts": len(eliminated) + 1,
+                                }
+                                st.rerun()
+                            else:
+                                # Wrong — add to eliminated list
+                                st.session_state[eliminated_key] = eliminated + [i]
+                                st.rerun()
 
                 # "I need more help" button
                 st.markdown("---")
                 drop_level = 1 if is_level_2 else 2
-                if st.button("🤔 I need more help", use_container_width=True, key="mc_help"):
+                if st.button("🤔 I need more help", use_container_width=True, key=f"mc_help_{len(eliminated)}"):
                     st.session_state.confidence_level = drop_level
                     st.session_state.phase = "loading"
                     st.session_state.dropped_level = True
                     st.rerun()
 
             else:
-                # Show result of their answer
+                # Student got it right — show confirmation
                 result = st.session_state[answer_key]
                 options = step.get("options", [])
-                correct_idx = result["correct"]
 
-                if result["is_correct"]:
-                    st.success(f"✅ **{options[result['selected']]}**")
-                    if step.get("explanation"):
-                        st.caption(step["explanation"])
-                else:
-                    st.error(f"❌ You chose: **{options[result['selected']]}**")
-                    st.success(f"✅ Correct: **{options[correct_idx]}**")
-                    if step.get("explanation"):
-                        st.info(step["explanation"])
+                st.success(f"✅ **{options[result['selected']]}**")
+                if result.get("attempts", 1) == 1:
+                    st.caption("Got it on the first try.")
+                if step.get("explanation"):
+                    st.caption(step["explanation"])
 
                 # Next step button
                 if st.button("**Next Step →**", type="primary", use_container_width=True, key="mc_next"):
