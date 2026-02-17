@@ -1,1 +1,0 @@
-# mathful-minds
