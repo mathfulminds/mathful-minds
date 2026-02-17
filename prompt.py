@@ -506,8 +506,8 @@ When you catch a misconception, name it internally and address it with a targete
 
 def build_system_prompt(skill_id: int, skill_name: str, confidence_level: int) -> str:
     """Build the complete system prompt with skill and confidence injected."""
-    return SYSTEM_PROMPT.format(
-        skill_id=skill_id,
-        skill_name=skill_name,
-        confidence_level=confidence_level,
-    )
+    prompt = SYSTEM_PROMPT
+    prompt = prompt.replace("{skill_id}", str(skill_id))
+    prompt = prompt.replace("{skill_name}", str(skill_name))
+    prompt = prompt.replace("{confidence_level}", str(confidence_level))
+    return prompt
