@@ -116,9 +116,9 @@ They selected Level 2 ("I don't really get it") — give a SIMPLER WORKED EXAMPL
 
 Respond with ONLY valid JSON (no other text):
 
-{"problem_restated": "original problem", "simpler_example": {"problem": "simpler version", "steps": [{"math": "expr", "explanation": "one sentence"}], "final_answer": "answer", "bridge": "one sentence connecting to original"}, "walkthrough_steps": [{"step_number": 1, "question": "what to do next?", "current_state": "current equation", "options": ["A", "B", "C"], "correct_index": 0, "explanation": "why correct", "result": "equation after step"}], "final_answer": "answer"}
+{"problem_restated": "original problem", "simpler_example": {"problem": "simpler version", "steps": [{"math": "expr", "explanation": "one sentence"}], "final_answer": "answer", "bridge": "one sentence connecting to original"}, "walkthrough_steps": [{"step_number": 1, "question": "what to do next?", "current_state": "current equation", "options": ["A", "B", "C"], "option_explanations": ["why A is wrong (or correct)", "why B is wrong (or correct)", "why C is wrong (or correct)"], "correct_index": 0, "explanation": "why correct", "result": "equation after step"}], "final_answer": "answer"}
 
-Rules: Simpler example has fewer steps or easier numbers. Exactly {{NUM_OPTIONS}} options per step. Wrong options reflect real misconceptions. correct_index is 0-based."""
+Rules: Simpler example has fewer steps or easier numbers. Exactly {{NUM_OPTIONS}} options per step. Wrong options reflect real misconceptions. correct_index is 0-based. option_explanations: for wrong options, explain the specific error in one sentence (e.g. "This adds instead of subtracting — remember, we need to undo the +5"). For the correct option, write "Correct!"."""
 
 
 LEVEL_3_PROMPT = """The student needs help with: {{PROBLEM}}
@@ -127,9 +127,9 @@ They selected Level 3 ("I'm starting to get it") — STRAIGHT into MULTIPLE CHOI
 
 Respond with ONLY valid JSON (no other text):
 
-{"problem_restated": "problem", "walkthrough_steps": [{"step_number": 1, "question": "what to do?", "current_state": "current equation", "options": ["A", "B", "C", "D"], "correct_index": 0, "explanation": "brief confirmation", "result": "after step"}], "final_answer": "answer"}
+{"problem_restated": "problem", "walkthrough_steps": [{"step_number": 1, "question": "what to do?", "current_state": "current equation", "options": ["A", "B", "C", "D"], "option_explanations": ["why A is wrong or correct", "why B is wrong or correct", "why C is wrong or correct", "why D is wrong or correct"], "correct_index": 0, "explanation": "brief confirmation", "result": "after step"}], "final_answer": "answer"}
 
-Rules: Exactly {{NUM_OPTIONS}} options per step. Wrong options = common misconceptions. Brief confirmations. correct_index is 0-based."""
+Rules: Exactly {{NUM_OPTIONS}} options per step. Wrong options = common misconceptions. Brief confirmations. correct_index is 0-based. option_explanations: for wrong options, one sentence explaining the specific mistake. For the correct option, write "Correct!"."""
 
 
 LEVEL_4_PROMPT = """The student needs help with: {{PROBLEM}}
