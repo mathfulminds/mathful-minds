@@ -6,6 +6,7 @@ Streamlit Application v2 — Complete 5-Level Confidence System
 import streamlit as st
 import anthropic
 import json
+import re
 from tutor import (
     generate_worked_example,
     generate_mc_walkthrough,
@@ -289,6 +290,43 @@ def render_step_progress(total, current):
     st.markdown(f'<div class="step-progress">{dots}</div>', unsafe_allow_html=True)
 
 
+def render_nav_bar():
+    """Render the home/back navigation at the top of every working phase."""
+    col_home, col_spacer = st.columns([1, 4])
+    with col_home:
+        if st.button("🏠 Home", key="nav_home", use_container_width=True):
+            reset_problem()
+            st.rerun()
+
+
+def render_math_preview(text):
+    """Render a live LaTeX preview of the student's typed math."""
+    if not text.strip():
+        return
+
+    # Convert common text notation to LaTeX
+    preview = text
+    preview = preview.replace("sqrt(", "\\sqrt{").replace("cbrt(", "\\sqrt[3]{")
+    preview = preview.replace("pi", "\\pi").replace("π", "\\pi")
+
+    # Handle fractions: a/b → \frac{a}{b}
+    # Simple fraction pattern: number/number or variable/variable
+    preview = re.sub(r'(\d+)\s*/\s*(\d+)', r'\\frac{\1}{\2}', preview)
+
+    # Handle exponents: x^2 → x^{2}, x^12 → x^{12}
+    preview = re.sub(r'\^(\d+)', r'^{\1}', preview)
+    preview = re.sub(r'\^([a-zA-Z])', r'^{\1}', preview)
+
+    # Close any unclosed braces from sqrt/cbrt
+    open_count = preview.count("{") - preview.count("}")
+    preview += "}" * max(0, open_count)
+
+    try:
+        st.latex(preview)
+    except Exception:
+        pass  # Silently fail if LaTeX is invalid
+
+
 # ═══════════════════════════════════════
 # HEADER
 # ═══════════════════════════════════════
@@ -362,6 +400,11 @@ if st.session_state.phase == "input":
         # Sync text area back to math_input
         if problem_text != st.session_state.math_input:
             st.session_state.math_input = problem_text
+
+        # Live LaTeX preview
+        if problem_text.strip():
+            st.caption("Preview:")
+            render_math_preview(problem_text)
 
         # Helpful hints
         with st.expander("💡 How to type math expressions"):
@@ -472,6 +515,8 @@ elif st.session_state.phase == "photo_confirm":
 # PHASE 2: CONFIDENCE SELECTION
 # ═══════════════════════════════════════
 elif st.session_state.phase == "confidence":
+    render_nav_bar()
+
     # Show the problem
     st.markdown(f'<div class="problem-box">📝 {st.session_state.problem}</div>', unsafe_allow_html=True)
 
@@ -499,10 +544,7 @@ elif st.session_state.phase == "confidence":
                 st.session_state.phase = "loading"
                 st.rerun()
 
-    # Back button
-    if st.button("← Change problem"):
-        reset_problem()
-        st.rerun()
+    # Back handled by home button above
 
 
 # ═══════════════════════════════════════
@@ -578,6 +620,7 @@ elif st.session_state.phase == "loading":
 # LEVEL 1: FULL WORKED EXAMPLE
 # ═══════════════════════════════════════
 elif st.session_state.phase == "level_1":
+    render_nav_bar()
     data = st.session_state.level_data
     problem = st.session_state.problem
 
@@ -656,6 +699,7 @@ elif st.session_state.phase == "level_1":
 # LEVEL 2: SIMPLER EXAMPLE → MC (2-3 options)
 # ═══════════════════════════════════════
 elif st.session_state.phase == "level_2_example":
+    render_nav_bar()
     data = st.session_state.level_data
     problem = st.session_state.problem
 
@@ -693,6 +737,7 @@ elif st.session_state.phase == "level_2_example":
 # LEVELS 2 & 3: MULTIPLE CHOICE WALKTHROUGH
 # ═══════════════════════════════════════
 elif st.session_state.phase in ("level_2_mc", "level_3_mc"):
+    render_nav_bar()
     data = st.session_state.level_data
     problem = st.session_state.problem
     steps = data.get("walkthrough_steps", [])
@@ -710,76 +755,96 @@ elif st.session_state.phase in ("level_2_mc", "level_3_mc"):
         st.session_state.phase = "solution"
         st.rerun()
 
-    # Current step
+    # Current step — TWO COLUMN LAYOUT
     if current < len(steps):
         step = steps[current]
-
-        # Show current equation state
-        if step.get("current_state"):
-            st.markdown(f"**Current:** `{step['current_state']}`")
-
-        # Question
-        st.markdown(f"### Step {step.get('step_number', current + 1)}: {step.get('question', 'What would you do next?')}")
-
-        # Check if student already answered this step
         answer_key = f"mc_answer_{current}"
 
-        if answer_key not in st.session_state:
-            # Show options as buttons
-            options = step.get("options", [])
-            option_labels = ["A", "B", "C", "D", "E"]
+        # ── LEFT: Work so far | RIGHT: Current question + options ──
+        col_work, col_mc = st.columns([1, 1])
 
-            for i, option in enumerate(options):
-                label = option_labels[i] if i < len(option_labels) else str(i + 1)
-                if st.button(f"**{label}.** {option}", key=f"opt_{current}_{i}", use_container_width=True):
-                    correct_idx = step.get("correct_index", 0)
-                    is_correct = (i == correct_idx)
-                    st.session_state[answer_key] = {
-                        "selected": i,
-                        "correct": correct_idx,
-                        "is_correct": is_correct,
-                    }
+        with col_work:
+            st.markdown("##### Work So Far")
+
+            # Show all completed steps
+            for prev_i in range(current):
+                prev_step = steps[prev_i]
+                prev_answer_key = f"mc_answer_{prev_i}"
+                if prev_answer_key in st.session_state:
+                    prev_result = prev_step.get("result", "")
+                    st.markdown(f"""
+                    <div class="solution-step">
+                        <div class="step-math">{prev_result}</div>
+                        <div class="step-explain">Step {prev_step.get('step_number', prev_i + 1)} ✓</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+            # Show current state
+            if step.get("current_state"):
+                st.markdown(f"""
+                <div class="solution-step" style="border: 2px solid #3498db; border-radius: 8px; padding: 12px;">
+                    <div class="step-math" style="font-size: 1.15rem;">{step['current_state']}</div>
+                    <div class="step-explain" style="color: #3498db;">← Current</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+        with col_mc:
+            st.markdown(f"##### Step {step.get('step_number', current + 1)}")
+            st.markdown(f"**{step.get('question', 'What would you do next?')}**")
+
+            if answer_key not in st.session_state:
+                # Show MC options as buttons
+                options = step.get("options", [])
+                option_labels = ["A", "B", "C", "D", "E"]
+
+                for i, option in enumerate(options):
+                    label = option_labels[i] if i < len(option_labels) else str(i + 1)
+                    if st.button(f"**{label}.** {option}", key=f"opt_{current}_{i}", use_container_width=True):
+                        correct_idx = step.get("correct_index", 0)
+                        is_correct = (i == correct_idx)
+                        st.session_state[answer_key] = {
+                            "selected": i,
+                            "correct": correct_idx,
+                            "is_correct": is_correct,
+                        }
+                        st.rerun()
+
+                # "I need more help" button
+                st.markdown("---")
+                drop_level = 1 if is_level_2 else 2
+                if st.button("🤔 I need more help", use_container_width=True, key="mc_help"):
+                    st.session_state.confidence_level = drop_level
+                    st.session_state.phase = "loading"
+                    st.session_state.dropped_level = True
                     st.rerun()
 
-            # "I need more help" button
-            st.markdown("---")
-            drop_level = 1 if is_level_2 else 2
-            drop_label = "I need more help" if is_level_2 else "I need more help"
-            if st.button(f"🤔 {drop_label}", use_container_width=True):
-                st.session_state.confidence_level = drop_level
-                st.session_state.phase = "loading"
-                st.session_state.dropped_level = True
-                st.rerun()
-
-        else:
-            # Show result
-            result = st.session_state[answer_key]
-            options = step.get("options", [])
-            correct_idx = result["correct"]
-
-            if result["is_correct"]:
-                st.success(f"✅ **{options[result['selected']]}**")
-                if step.get("explanation"):
-                    st.caption(step["explanation"])
             else:
-                st.error(f"❌ Not quite. You chose: **{options[result['selected']]}**")
-                st.success(f"✅ The correct step: **{options[correct_idx]}**")
-                if step.get("explanation"):
-                    st.info(step["explanation"])
+                # Show result of their answer
+                result = st.session_state[answer_key]
+                options = step.get("options", [])
+                correct_idx = result["correct"]
 
-            if step.get("result"):
-                st.markdown(f"**After this step:** `{step['result']}`")
+                if result["is_correct"]:
+                    st.success(f"✅ **{options[result['selected']]}**")
+                    if step.get("explanation"):
+                        st.caption(step["explanation"])
+                else:
+                    st.error(f"❌ You chose: **{options[result['selected']]}**")
+                    st.success(f"✅ Correct: **{options[correct_idx]}**")
+                    if step.get("explanation"):
+                        st.info(step["explanation"])
 
-            # Next step button
-            if st.button("**Next Step →**", type="primary", use_container_width=True):
-                st.session_state.current_step += 1
-                st.rerun()
+                # Next step button
+                if st.button("**Next Step →**", type="primary", use_container_width=True, key="mc_next"):
+                    st.session_state.current_step += 1
+                    st.rerun()
 
 
 # ═══════════════════════════════════════
 # LEVEL 4: OPEN-ENDED PROMPTS
 # ═══════════════════════════════════════
 elif st.session_state.phase == "level_4_open":
+    render_nav_bar()
     data = st.session_state.level_data
     problem = st.session_state.problem
 
@@ -910,6 +975,7 @@ elif st.session_state.phase == "level_4_open":
 # LEVEL 5: ANSWER CHECK
 # ═══════════════════════════════════════
 elif st.session_state.phase == "level_5_answer":
+    render_nav_bar()
     data = st.session_state.level_data
     problem = st.session_state.problem
 
@@ -973,6 +1039,7 @@ elif st.session_state.phase == "level_5_answer":
 # FINAL SOLUTION (shown at end of all levels)
 # ═══════════════════════════════════════
 elif st.session_state.phase == "solution":
+    render_nav_bar()
     problem = st.session_state.problem
 
     st.markdown(f'<div class="problem-box">📝 {problem}</div>', unsafe_allow_html=True)
