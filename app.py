@@ -147,23 +147,31 @@ with st.sidebar:
     domain_names = list(DOMAINS.keys())
     selected_domain = st.selectbox(
         "Domain",
-        domain_names,
-        format_func=lambda d: f"{DOMAINS[d]['icon']} {d}",
+        [""] + domain_names,
+        format_func=lambda d: "Select a domain..." if d == "" else f"{DOMAINS[d]['icon']} {d}",
     )
 
     if selected_domain:
         domain_data = DOMAINS[selected_domain]
         subcat_names = list(domain_data["subcategories"].keys())
 
-        selected_subcat = st.selectbox("Topic", subcat_names)
+        selected_subcat = st.selectbox(
+            "Topic",
+            [""] + subcat_names,
+            format_func=lambda s: "Select a topic..." if s == "" else s,
+        )
 
         if selected_subcat:
             skills_in_subcat = domain_data["subcategories"][selected_subcat]
             skill_options = {f"#{s['id']}: {s['name']}": s for s in skills_in_subcat}
 
-            selected_skill_label = st.selectbox("Skill", list(skill_options.keys()))
+            selected_skill_label = st.selectbox(
+                "Skill",
+                [""] + list(skill_options.keys()),
+                format_func=lambda s: "Select a skill..." if s == "" else s,
+            )
 
-            if selected_skill_label:
+            if selected_skill_label and selected_skill_label != "":
                 skill = skill_options[selected_skill_label]
                 # Check if skill changed
                 if (
