@@ -207,19 +207,19 @@ Respond with ONLY a JSON object in this exact format:
 {{
     "problem_restated": "The problem written clearly",
     "steps": [
-        {{"math": "the mathematical expression or equation for this step", "explanation": "One clear sentence explaining what was done and why"}},
-        {{"math": "next expression", "explanation": "Next explanation"}}
+        {{"math": "vertically aligned math", "explanation": "One clear sentence"}},
+        {{"math": "next aligned math", "explanation": "Next explanation"}}
     ],
     "final_answer": "The final answer clearly stated"
 }}
 
-Rules for generating steps:
-- Each step should have EXACTLY one mathematical operation
-- Explanations must be ONE sentence — clear, direct, no jargon
-- Use the specific teaching methods from your instructions (KCO for subtraction, KCF for division, butterfly method for fractions, formula framework for geometry, etc.)
-- Vertically align the math — each step builds on the previous one
+Rules:
+- Each step = ONE operation
+- The "math" field MUST use VERTICAL ALIGNMENT showing the operation directly below the terms it affects. Use spaces for alignment and \\n for line breaks. Example for subtracting 5 from both sides: "  3x + 5 = -16\\n      -5    -5\\n  ─────────────\\n  3x     = -21"
+- Explanations = ONE sentence, clear, direct, no jargon
+- Use KCO for integer subtraction, KCF for fraction division, butterfly method, formula framework, etc.
 - Include units where appropriate
-- For the first step, identify the variables or values given in the problem"""
+- First step: identify variables/values from the problem"""
 
     raw = call_claude(client, system, prompt)
 
