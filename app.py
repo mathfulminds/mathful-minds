@@ -1073,12 +1073,25 @@ elif st.session_state.phase == "solution":
             st.rerun()
     with col2:
         if st.button("Try a similar problem", use_container_width=True):
-            # Generate a practice problem
-            st.session_state.problem = f"Give me a problem similar to: {problem}"
-            st.session_state.phase = "confidence"
-            st.session_state.level_data = None
-            st.session_state.full_solution = None
-            st.rerun()
+            with st.spinner("Creating a similar problem..."):
+                try:
+                    client = get_client()
+                    system = build_system_prompt()
+                    raw = call_claude(client, system, f"""Generate a new math problem that tests the same skill as this problem: {problem}
+
+Use different numbers but the same concept and similar difficulty. Respond with ONLY a JSON object:
+{{"problem": "the new problem as a student would see it"}}""")
+                    result = parse_json_response(raw)
+                    new_problem = result.get("problem", "")
+                    if new_problem:
+                        reset_problem()
+                        st.session_state.problem = new_problem
+                        st.session_state.phase = "confidence"
+                        st.rerun()
+                    else:
+                        st.error("Couldn't generate a problem. Try again.")
+                except Exception as e:
+                    st.error(f"Error: {e}")
 
     # Ask a question
     st.markdown("---")
