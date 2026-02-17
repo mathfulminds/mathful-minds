@@ -14,6 +14,7 @@ from tutor import (
     generate_full_solution,
     generate_simpler_problem,
     ask_followup_question,
+    read_problem_from_image,
     call_claude,
     parse_json_response,
 )
@@ -163,13 +164,61 @@ st.markdown("""
         color: #1a1a2e;
         margin: 1rem 0;
     }
+
+    /* Math keyboard */
+    .math-kb {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 8px;
+        background: #f7f8fa;
+        border: 1px solid #e0e3e8;
+        border-radius: 8px;
+        margin: 0.5rem 0;
+    }
+    .math-kb-label {
+        font-size: 0.75rem;
+        color: #888;
+        width: 100%;
+        margin-bottom: 2px;
+    }
+
+    /* Tab styling for input methods */
+    .input-tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid #e0e3e8;
+    }
+    .input-tab {
+        padding: 8px 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #888;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+    }
+    .input-tab.active {
+        color: #0f3460;
+        border-bottom-color: #0f3460;
+    }
+
+    /* Photo preview */
+    .photo-preview {
+        border: 2px dashed #c5d5f0;
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        background: #f8faff;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 
 # ─── Session State Defaults ───
 DEFAULTS = {
-    "phase": "input",          # input → confidence → working → solution
+    "phase": "input",          # input → photo_confirm → confidence → working → solution
     "problem": "",
     "confidence_level": 0,
     "level_data": None,        # Structured data from Claude
@@ -181,6 +230,8 @@ DEFAULTS = {
     "show_simpler": False,
     "simpler_data": None,
     "dropped_level": False,
+    "photo_data": None,        # Extracted problem from photo
+    "math_input": "",          # Current math keyboard input
 }
 for key, val in DEFAULTS.items():
     if key not in st.session_state:
@@ -198,6 +249,10 @@ def reset_problem():
     """Reset everything for a new problem."""
     for key, val in DEFAULTS.items():
         st.session_state[key] = val
+    # Clear any dynamic MC/level answer keys
+    keys_to_remove = [k for k in st.session_state if k.startswith(("mc_answer_", "l4_answer_", "l4_mc_", "l4_input_", "l5_"))]
+    for k in keys_to_remove:
+        del st.session_state[k]
 
 
 def get_client():
@@ -266,41 +321,150 @@ if not st.session_state.api_key:
 # PHASE 1: PROBLEM INPUT
 # ═══════════════════════════════════════
 if st.session_state.phase == "input":
-    st.markdown("### Enter your math problem")
+    st.markdown("### What problem are you working on?")
 
-    # Text input
-    problem_text = st.text_area(
-        "Type or paste your problem here:",
-        placeholder="Example: Solve 3x + 5 = -16",
-        height=80,
-        label_visibility="collapsed",
-    )
+    # Input method tabs
+    tab_type, tab_photo = st.tabs(["✏️ Type It", "📸 Upload Photo"])
 
-    # Photo upload
-    uploaded_file = st.file_uploader(
-        "Or upload a photo of your problem",
-        type=["png", "jpg", "jpeg"],
-        label_visibility="collapsed",
-    )
+    with tab_type:
+        # Math keyboard — symbol insertion buttons
+        st.markdown('<div class="math-kb-label">Math Keyboard — tap to insert:</div>', unsafe_allow_html=True)
 
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        if st.button("**Let's Go →**", use_container_width=True, type="primary"):
+        kb_cols = st.columns(10)
+        math_symbols = [
+            ("⁄", " / ", "Fraction"),
+            ("x²", "^2", "Squared"),
+            ("x□", "^", "Exponent"),
+            ("√", "sqrt()", "Square root"),
+            ("³√", "cbrt()", "Cube root"),
+            ("π", "π", "Pi"),
+            ("≤", " ≤ ", "Less/equal"),
+            ("≥", " ≥ ", "Greater/equal"),
+            ("±", "±", "Plus/minus"),
+            ("( )", "()", "Parentheses"),
+        ]
+
+        for i, (display, insert, tooltip) in enumerate(math_symbols):
+            with kb_cols[i]:
+                if st.button(display, key=f"kb_{i}", help=tooltip, use_container_width=True):
+                    st.session_state.math_input = st.session_state.math_input + insert
+
+        # Text input area
+        problem_text = st.text_area(
+            "Type your problem:",
+            value=st.session_state.math_input,
+            placeholder="Example: Solve 3x + 5 = -16\n\nTip: Use the buttons above for fractions, exponents, etc.",
+            height=90,
+            key="problem_textarea",
+            label_visibility="collapsed",
+        )
+
+        # Sync text area back to math_input
+        if problem_text != st.session_state.math_input:
+            st.session_state.math_input = problem_text
+
+        # Helpful hints
+        with st.expander("💡 How to type math expressions"):
+            st.markdown("""
+            | To type... | Write it as... | Example |
+            |---|---|---|
+            | Fractions | `a/b` | `3/4 + 1/2` |
+            | Exponents | `^` | `x^2 + 3x - 7` |
+            | Square roots | `sqrt()` | `sqrt(16)` |
+            | Negative numbers | `-` | `-5 + 3` |
+            | Mixed numbers | whole and fraction | `2 and 1/3` |
+            | Pi | `π` or `pi` | `A = π × r^2` |
+            """)
+
+        if st.button("**Let's Go →**", use_container_width=True, type="primary", key="go_text"):
             if problem_text.strip():
                 st.session_state.problem = problem_text.strip()
                 st.session_state.phase = "confidence"
                 st.rerun()
-            elif uploaded_file:
-                # For now, ask student to also type the problem
-                # Photo OCR can be added in v1.1
-                st.warning("Please also type the problem in the text box so I can read it clearly.")
             else:
                 st.warning("Enter a math problem to get started.")
 
-    with col2:
-        if st.button("I need a practice problem", use_container_width=True):
-            st.session_state.problem = "__GENERATE__"
+    with tab_photo:
+        st.markdown("Upload a photo of your math problem and I'll read it for you.")
+
+        uploaded_file = st.file_uploader(
+            "Upload a photo",
+            type=["png", "jpg", "jpeg", "webp"],
+            label_visibility="collapsed",
+            key="photo_upload",
+        )
+
+        if uploaded_file:
+            # Show preview
+            st.image(uploaded_file, caption="Your uploaded problem", use_container_width=True)
+
+            if st.button("**Read This Problem →**", use_container_width=True, type="primary", key="go_photo"):
+                with st.spinner("Reading your problem..."):
+                    try:
+                        client = get_client()
+                        image_bytes = uploaded_file.getvalue()
+
+                        # Determine media type
+                        fname = uploaded_file.name.lower()
+                        if fname.endswith(".png"):
+                            media_type = "image/png"
+                        elif fname.endswith(".webp"):
+                            media_type = "image/webp"
+                        else:
+                            media_type = "image/jpeg"
+
+                        result = read_problem_from_image(client, image_bytes, media_type)
+                        st.session_state.photo_data = result
+                        st.session_state.phase = "photo_confirm"
+                        st.rerun()
+
+                    except anthropic.AuthenticationError:
+                        st.error("Invalid API key. Check your key in Streamlit Secrets.")
+                    except Exception as e:
+                        st.error(f"Couldn't read the image: {str(e)}")
+        else:
+            st.markdown("""
+            <div class="photo-preview">
+                📸 Drag and drop or click to upload<br>
+                <span style="font-size:0.8rem; color:#888;">Supports PNG, JPG, JPEG, WEBP</span>
+            </div>
+            """, unsafe_allow_html=True)
+
+
+# ═══════════════════════════════════════
+# PHASE 1.5: PHOTO CONFIRMATION
+# ═══════════════════════════════════════
+elif st.session_state.phase == "photo_confirm":
+    photo = st.session_state.photo_data
+
+    st.markdown("### Here's what I see:")
+
+    problem_text = photo.get("problem_text", "")
+    st.markdown(f'<div class="problem-box">📝 {problem_text}</div>', unsafe_allow_html=True)
+
+    if not photo.get("is_clear", True):
+        st.warning(f"⚠️ Some parts were hard to read: {photo.get('notes', '')}")
+
+    st.markdown("**Is this correct?**")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        if st.button("**Yes, that's right →**", type="primary", use_container_width=True):
+            st.session_state.problem = problem_text
             st.session_state.phase = "confidence"
+            st.rerun()
+
+    with col2:
+        if st.button("Let me edit it", use_container_width=True):
+            st.session_state.math_input = problem_text
+            st.session_state.phase = "input"
+            st.rerun()
+
+    with col3:
+        if st.button("Upload a new photo", use_container_width=True):
+            st.session_state.photo_data = None
+            st.session_state.phase = "input"
             st.rerun()
 
 
