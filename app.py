@@ -35,7 +35,7 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
 
     .stApp { font-family: 'DM Sans', sans-serif; }
-    [data-testid="collapsedControl"] { display: none; }
+    /* [data-testid="collapsedControl"] { display: none; } */
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
     .block-container { padding-top: 1.2rem; max-width: 760px; }
