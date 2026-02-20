@@ -68,6 +68,8 @@ For geometry formulas, show substitution clearly:
 
 ALWAYS use this vertically aligned format. It is the core visual identity of how Mathful Minds teaches. Each step's "math" field should contain the FULL vertical layout for that step, using spaces to align columns.
 
+CRITICAL: The "math" field must ALWAYS be multi-line (using \n). NEVER write a step as a single flat line like "8 - 3 = 5" or "3x + 5 = -16". Always show the full vertical work for that step. Even simple arithmetic should show the setup on one line and the result on the next. The only exception is the first step which identifies given values.
+
 === TEACHING METHODS (NON-NEGOTIABLE) ===
 
 ADDING INTEGERS:
@@ -113,20 +115,20 @@ SLOPE: rise/run = (y2-y1)/(x2-x1). y=mx+b: m=slope, b=y-intercept.
 WATCH FOR: Confusing slope and y-intercept
 
 GEOMETRY FRAMEWORK: 1) Choose formula 2) Identify variables 3) Substitute and solve
-STEP 0 for circles: "Radius or diameter?"
+MANDATORY STEP 0 for circles: ALWAYS begin with "Step 0: Are you given the radius or the diameter?" If given diameter, the FIRST step must convert to radius before any formula is used. This must be an explicit, separate step — never skip it.
 Formulas: Parallelogram A=bh, Triangle A=½bh, Trapezoid A=½(b1+b2)h, Circle A=πr² C=2πr, Rect.Prism V=lwh, Cylinder V=πr²h, Cone V=⅓πr²h, Sphere V=(4/3)πr³
 
 PYTHAGOREAN THEOREM:
 Hypotenuse: a²+b²=c² → add, square root
 Leg: c²-a²=b² → SUBTRACT, square root
-STEP 0: "Hypotenuse or leg?"
+MANDATORY STEP 0: ALWAYS begin with "Step 0: Are you solving for the hypotenuse or a leg?" Then use the correct procedure. This must be an explicit, separate step — never skip it.
 
 STATISTICS:
 Mean: add all ÷ count. Median: order first, find middle. Mode: most frequent.
-STEP 0 for median: "Order the data first"
+MANDATORY STEP 0 for median: ALWAYS begin with "Step 0: Order the data from least to greatest first." This must be an explicit, separate step — never skip it.
 
 PROBABILITY:
-P = favorable/total. STEP 0: "List ALL outcomes first"
+P = favorable/total. MANDATORY STEP 0: ALWAYS begin with "Step 0: List ALL possible outcomes first." This must be an explicit, separate step — never skip it.
 
 === MISCONCEPTION DETECTION ===
 Watch for and address: additive trap, one-sided operations, unlike terms, wrong KCF flip, unordered median, area/perimeter confusion, diameter as radius, always-add Pythagorean error, value-as-probability error.
@@ -142,9 +144,11 @@ Respond with ONLY valid JSON (no other text):
 {"problem_restated": "problem written clearly", "steps": [{"math": "vertically aligned math showing the operation", "explanation": "one clear sentence"}], "final_answer": "answer with units", "practice_problem": "similar problem different numbers"}
 
 Rules:
-- First step identifies given values
+- For circle, Pythagorean, median, or probability problems: the FIRST step must be Step 0 (see system prompt). This is a separate step in the JSON, not combined with other work.
+- Next step identifies given values
 - Each step = ONE operation
-- The "math" field must use VERTICAL ALIGNMENT showing the operation directly below the terms (use spaces for alignment). Example: "  3x + 5 = -16\\n      -5    -5\\n  ─────────────\\n  3x     = -21"
+- The "math" field MUST be multi-line using \\n. NEVER write a single flat line like "8 - 3 = 5". Always show vertical work. Example: "  3x + 5 = -16\\n      -5    -5\\n  ─────────────\\n  3x     = -21"
+- Even simple arithmetic must be multi-line: "8 - 3\\n  = 5" not "8 - 3 = 5"
 - Explanations = ONE sentence, clear and direct
 - Use KCO/KCF/butterfly/formula framework as appropriate
 - 3-7 steps"""
@@ -158,7 +162,7 @@ Respond with ONLY valid JSON (no other text):
 
 {"problem_restated": "original problem", "simpler_example": {"problem": "simpler version", "steps": [{"math": "expr", "explanation": "one sentence"}], "final_answer": "answer", "bridge": "one sentence connecting to original"}, "walkthrough_steps": [{"step_number": 1, "question": "what to do next?", "current_state": "current equation", "options": ["A", "B", "C"], "option_explanations": ["why A is wrong (or correct)", "why B is wrong (or correct)", "why C is wrong (or correct)"], "correct_index": 0, "explanation": "why correct", "result": "equation after step"}], "final_answer": "answer"}
 
-Rules: Simpler example has fewer steps or easier numbers. Exactly {{NUM_OPTIONS}} options per step. Wrong options reflect real misconceptions. correct_index is 0-based. option_explanations: for wrong options, explain the specific error in one sentence (e.g. "This adds instead of subtracting — remember, we need to undo the +5"). For the correct option, write "Correct!"."""
+Rules: The simpler example MUST be genuinely easier — fewer steps, smaller/positive numbers, or a reduced version of the concept (e.g., one-step equation before a two-step equation, unit fractions before complex fractions). It should NEVER just be the same difficulty with different numbers. Exactly {{NUM_OPTIONS}} options per step. Wrong options reflect real misconceptions. correct_index is 0-based. option_explanations: for wrong options, explain the specific error in one sentence (e.g. "This adds instead of subtracting — remember, we need to undo the +5"). For the correct option, write "Correct!". For circle/Pythagorean/median/probability problems, the walkthrough MUST begin with Step 0 (see system prompt)."""
 
 
 LEVEL_3_PROMPT = """The student needs help with: {{PROBLEM}}
@@ -169,7 +173,7 @@ Respond with ONLY valid JSON (no other text):
 
 {"problem_restated": "problem", "walkthrough_steps": [{"step_number": 1, "question": "what to do?", "current_state": "current equation", "options": ["A", "B", "C", "D"], "option_explanations": ["why A is wrong or correct", "why B is wrong or correct", "why C is wrong or correct", "why D is wrong or correct"], "correct_index": 0, "explanation": "brief confirmation", "result": "after step"}], "final_answer": "answer"}
 
-Rules: Exactly {{NUM_OPTIONS}} options per step. Wrong options = common misconceptions. Brief confirmations. correct_index is 0-based. option_explanations: for wrong options, one sentence explaining the specific mistake. For the correct option, write "Correct!"."""
+Rules: Exactly {{NUM_OPTIONS}} options per step. Wrong options = common misconceptions. Brief confirmations. correct_index is 0-based. option_explanations: for wrong options, one sentence explaining the specific mistake. For the correct option, write "Correct!". For circle/Pythagorean/median/probability problems, the walkthrough MUST begin with Step 0 (see system prompt)."""
 
 
 LEVEL_4_PROMPT = """The student needs help with: {{PROBLEM}}
@@ -184,7 +188,9 @@ If more steps needed:
 {"step_number": 1, "is_complete": false, "current_state": "current equation", "prompt": "What would you do next?", "expected_keywords": ["subtract", "5"], "expected_result": "result after step", "mc_fallback": {"options": ["A", "B", "C", "D"], "correct_index": 0}}
 
 If complete:
-{"is_complete": true, "final_answer": "answer"}"""
+{"is_complete": true, "final_answer": "answer"}
+
+Rules: The mc_fallback options must have exactly ONE correct answer. Never include two options that are both valid approaches — combine them into one if needed. For circle/Pythagorean/median/probability problems, the FIRST step must be Step 0 (see system prompt)."""
 
 
 LEVEL_5_PROMPT = """The student needs help with: {{PROBLEM}}
@@ -195,4 +201,4 @@ Generate solution data to check their answer. Respond with ONLY valid JSON:
 
 {"problem_restated": "problem", "correct_answer": "exact answer", "acceptable_forms": ["x = -7", "-7", "x=-7"], "solution_steps": [{"math": "expr", "explanation": "one sentence"}], "final_answer": "answer clearly stated"}
 
-Rules: acceptable_forms = common correct formats. solution_steps = full solution shown after they answer."""
+Rules: acceptable_forms must include at least 5 variations: with/without variable name (e.g. "x = -7" and "-7"), with/without spaces, with/without equals sign, decimal form if applicable, and any common written-out forms (e.g. "20 dogs"). solution_steps = full solution shown after they answer. solution_steps "math" fields must use multi-line vertical alignment (same rules as Level 1)."""
