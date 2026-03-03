@@ -1,6 +1,6 @@
 """
 Mathful Minds — Skills Catalog
-All 245 skills organized by domain and subcategory.
+All 248 skills organized by domain and subcategory.
 """
 
 DOMAINS = {
@@ -28,6 +28,7 @@ DOMAINS = {
                 {"id": 16, "name": "Divide whole numbers by fractions"},
                 {"id": 17, "name": "Divide fractions by fractions"},
                 {"id": 18, "name": "Divide with whole and mixed numbers"},
+                {"id": 246, "name": "Convert repeating decimals to fractions"},
             ],
             "Real Numbers": [
                 {"id": 19, "name": "Roots (square roots, cube roots)"},
@@ -99,6 +100,7 @@ DOMAINS = {
                 {"id": 63, "name": "Subtract linear expressions"},
                 {"id": 64, "name": "Factor linear expressions"},
                 {"id": 65, "name": "Combine operations with linear expressions"},
+                {"id": 248, "name": "Estimation strategies (rounding to estimate)"},
             ],
             "One-Step Equations": [
                 {"id": 66, "name": "Use substitution to solve one-step equations"},
@@ -223,6 +225,7 @@ DOMAINS = {
                 {"id": 164, "name": "Parallel lines cut by a transversal"},
                 {"id": 165, "name": "Triangles (angle sum, triangle inequality)"},
                 {"id": 166, "name": "Angle relationships and triangles"},
+                {"id": 247, "name": "Classify triangles by sides and angles"},
             ],
             "Scale & Measurement": [
                 {"id": 167, "name": "Scale drawings"},
