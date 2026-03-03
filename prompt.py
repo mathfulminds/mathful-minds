@@ -103,16 +103,46 @@ SIMPLIFYING: "Find a number that goes into both top and bottom evenly. Divide bo
 
 ROOTS: Square: "___ × ___ = ?" Cube: "___ × ___ × ___ = ?"
 
+REPEATING DECIMALS → FRACTIONS (The 10x Method):
+Step 1: Let x = the repeating decimal (e.g., x = 0.333...)
+Step 2: Multiply both sides by 10 (or 100 for two repeating digits): 10x = 3.333...
+Step 3: Subtract the original: 10x - x = 3.333... - 0.333...
+Step 4: Simplify: 9x = 3, so x = 3/9 = 1/3
+For two-digit repeats, multiply by 100. For three-digit repeats, multiply by 1000.
+
+COMPARING IRRATIONAL EXPRESSIONS (Estimate and Compare):
+To compare expressions like 5√7 vs 7√5:
+Step 1: Estimate the radical between two consecutive integers (√7 is between 2 and 3, closer to 2.6)
+Step 2: Multiply the coefficient by the estimate (5 × 2.6 = 13)
+Step 3: Do the same for the other expression (7 × √5 ≈ 7 × 2.2 = 15.4)
+Step 4: Compare the estimates
+Alternative: Square both expressions to avoid radicals entirely: (5√7)² = 175 vs (7√5)² = 245
+
 RATIOS: Three forms: a/b, a to b, a:b. Scale by multiplying (NEVER adding).
 WATCH FOR: Additive trap
+PROPORTIONAL vs ADDITIVE REASONING: When a problem asks "is this proportional?", teach students to CHECK: "Does y/x give the same number every time?" If yes → proportional (multiply). If no → not proportional. The #1 misconception is students who ADD the same amount instead of MULTIPLY by the same factor. Always show both approaches side by side and ask: "Which one keeps the ratio the same?"
+
+ESTIMATION: When estimating, round each number to the nearest easy value (nearest 10, 100, or whole number), then compute. Check: "Is my estimate close to the exact answer?" Show the rounded version above the original.
 
 EQUATIONS: Whatever you do to one side, do to the other.
 WATCH FOR: One-sided operations, combining unlike terms
 
 INEQUALITIES: Same as equations. Multiply/divide by negative → FLIP sign.
 
+LINEAR vs NONLINEAR IDENTIFICATION:
+To determine if an equation is linear: "Is x raised to any power other than 1? Is x in a denominator? Is x under a radical or inside an exponent?" If ANY answer is yes → nonlinear. If ALL answers are no → linear.
+y = 3x + 2 → linear (x is to the first power)
+y = x² + 1 → nonlinear (x is squared)
+y = 1/x → nonlinear (x is in the denominator)
+
 SLOPE: rise/run = (y2-y1)/(x2-x1). y=mx+b: m=slope, b=y-intercept.
 WATCH FOR: Confusing slope and y-intercept
+
+TRIANGLE CLASSIFICATION — Two-Question Sort:
+Question 1 (by sides): All sides equal? → Equilateral. Exactly two equal? → Isosceles. No sides equal? → Scalene.
+Question 2 (by angles): Any angle = 90°? → Right. Any angle > 90°? → Obtuse. All angles < 90°? → Acute.
+A triangle gets TWO labels (one from each question), e.g., "isosceles right triangle."
+STEP 0: Always classify by BOTH sides AND angles.
 
 GEOMETRY FRAMEWORK: 1) Choose formula 2) Identify variables 3) Substitute and solve
 MANDATORY STEP 0 for circles: ALWAYS begin with "Step 0: Are you given the radius or the diameter?" If given diameter, the FIRST step must convert to radius before any formula is used. This must be an explicit, separate step — never skip it.
@@ -127,11 +157,31 @@ STATISTICS:
 Mean: add all ÷ count. Median: order first, find middle. Mode: most frequent.
 MANDATORY STEP 0 for median: ALWAYS begin with "Step 0: Order the data from least to greatest first." This must be an explicit, separate step — never skip it.
 
+CHOOSING MEASURE OF CENTER (The Outlier Check):
+Step 1: Order the data from least to greatest
+Step 2: Look for outliers (values much larger or smaller than the rest) or clusters
+Step 3: If outliers exist or data is skewed → use MEDIAN (it resists outliers)
+Step 4: If data is symmetric with no outliers → use MEAN (it uses all values)
+WATCH FOR: Students defaulting to mean without checking for outliers
+
+MEAN ABSOLUTE DEVIATION — 4-Step MAD:
+Step 1: Find the mean of the data set
+Step 2: Find each deviation (subtract the mean from each data value)
+Step 3: Take the absolute value of each deviation
+Step 4: Find the mean of those absolute values → that's the MAD
+Show the work in a table format: Data | Deviation | |Deviation|
+
+SAMPLING & SURVEY BIAS — "Who Was Asked?":
+Step 1: Identify the population (who is the study trying to learn about?)
+Step 2: Identify the sample (who was actually surveyed?)
+Step 3: Ask: "Does the sample represent the whole population?" If the sample is only from one group, location, or time → biased. If every member of the population had an equal chance of being selected → unbiased (random).
+WATCH FOR: Students confusing sample size with sample quality — a large biased sample is still biased.
+
 PROBABILITY:
 P = favorable/total. MANDATORY STEP 0: ALWAYS begin with "Step 0: List ALL possible outcomes first." This must be an explicit, separate step — never skip it.
 
 === MISCONCEPTION DETECTION ===
-Watch for and address: additive trap, one-sided operations, unlike terms, wrong KCF flip, unordered median, area/perimeter confusion, diameter as radius, always-add Pythagorean error, value-as-probability error.
+Watch for and address: additive trap (scaling ratios by adding instead of multiplying), one-sided operations, combining unlike terms, wrong KCF flip, unordered median, area/perimeter confusion, diameter as radius, always-add Pythagorean error, value-as-probability error, defaulting to mean without checking for outliers, confusing sample size with sample quality (large biased sample is still biased), confusing (1,r) with (r,1) on proportional graphs, applying exponent rules incorrectly ((a-b)³ ≠ a³-b³), classifying triangles by only sides OR only angles (need both).
 """
 
 
@@ -150,7 +200,7 @@ Rules:
 - The "math" field MUST be multi-line using \\n. NEVER write a single flat line like "8 - 3 = 5". Always show vertical work. Example: "  3x + 5 = -16\\n      -5    -5\\n  ─────────────\\n  3x     = -21"
 - Even simple arithmetic must be multi-line: "8 - 3\\n  = 5" not "8 - 3 = 5"
 - Explanations = ONE sentence, clear and direct
-- Use KCO/KCF/butterfly/formula framework as appropriate
+- Use KCO/KCF/butterfly/formula framework/10x method/estimate-and-compare/outlier check/4-step MAD/who-was-asked/two-question sort as appropriate
 - 3-7 steps"""
 
 
